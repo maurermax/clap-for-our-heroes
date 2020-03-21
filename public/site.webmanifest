@@ -1,0 +1,19 @@
+{
+    "name": "Clap For Our Heroes",
+    "short_name": "Clap For Our Heroes",
+    "icons": [
+        {
+            "src": "/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#f2efe9",
+    "background_color": "#f2efe9",
+    "display": "standalone"
+}
