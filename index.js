@@ -11,6 +11,10 @@ const _ = require('lodash');
 
 // https://coolors.co/963484-f7f1f6-4e4d5c-223843-f2efe9
 
+if (process.env.NODE_ENV === 'production') {
+    app.use(require('./src/service/forceSsl'));
+}
+
 app.use(express.static('public'));
 app.set('view engine', 'pug');
 
