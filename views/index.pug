@@ -8,17 +8,19 @@ div(id="clapBody" class="container")
     div(class="clapContainer")
         span(class="clapCount") {{claps | format}}
     div(class="clapLabel") claps
-    div(class="moreInfo")
-        span(class="localClaps") Your claps: {{localClaps | format}}
-        span(style="display: inline-block; width: 80px; height: 1px;")
-        span(class="connectionCount") People clapping: {{connections | format}}
+    div(class="moreInfo row")
+        div(class="col-sm-2")
+        div(class="col-sm-4 localClaps") Your claps: {{localClaps | format}}
+        div(class="col-sm-4 connectionCount") People clapping: {{connections | format}}
     div(class="ctaContainer")
         a(class='cta' v-on:click="clap();")
             img(id="clapHands" src="/images/clap.svg")
     footer
         div(class="made") Made with ❤ in Munich
         div(class="imprint") <a href="/imprint">Impressum - Datenschutz</a>
-        div(class="iconInfo") Icon created by <a href="https://www.flaticon.com/de/autoren/darius-dan" title="Darius Dan">Darius Dan</a> from <a href="https://www.flaticon.com/de/" title="Flaticon">www.flaticon.com</a>
+        div(class="credits")
+            div Icon created by <a href="https://www.flaticon.com/de/autoren/darius-dan" title="Darius Dan">Darius Dan</a> from <a href="https://www.flaticon.com/de/" title="Flaticon">www.flaticon.com</a>
+            div Sounds from <a href="http://www.freesoundslibrary.com">http://www.freesoundslibrary.com</a>
 
 
 script(src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous")
@@ -100,17 +102,37 @@ script.
             localClaps: 0,
             connections: 0,
             groups: ['Doctors', 'Health Care Workers', 'Police and Firefighters', 'Store Workers', 'Social Distancers'],
-            activeGroup: ""
+            activeGroup: "",
+            clapSound: new Howl({src: ['/sfx/clap.mp3'], volume: 0.5}),
+            crowdSound: new Howl({src: ['/sfx/crowd.mp3'], loop: true, volume: 0.5}),
+            massSound: new Howl({src: ['/sfx/mass.mp3'], loop: true, volume: 0.5}),
+            clapsPerSecond: 0,
+            currentLoop: null
         },
         methods: {
             incomingStats: function(stats) {
                this.claps = stats.claps;
                this.connections = stats.connections;
+               this.clapsPerSecond = stats.clapsPerSecond;
+               if (this.clapsPerSecond < 10 && this.currentLoop !== null) {
+                   this.crowdSound.stop();
+                   this.massSound.stop();
+                   this.currentLoop = null;
+               } else if (this.clapsPerSecond >= 10 && this.clapsPerSecond < 100 && this.currentLoop !== 'crowd') {
+                    this.crowdSound.play();
+                    this.massSound.stop();
+                    this.currentLoop = 'crowd';
+               } else if (this.clapsPerSecond >= 100 && this.currentLoop !== 'mass') {
+                   this.crowdSound.stop();
+                   this.massSound.play();
+                   this.currentLoop = 'mass';
+                }
             },
             clap: function() {
                 socket.emit('clap');
                 this.localClaps++;
                 addParticle(document.getElementById('clapHands'));
+                this.clapSound.play();
             },
             changeActiveGroup: function() {
                 if (this.groups.length <= 1) return;

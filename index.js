@@ -7,6 +7,7 @@ const store = require('./src/store');
 const USERS_ACTIVE_KEY = 'USERS_ACTIVE';
 const CLAPS_KEY = 'CLAPS_KEY';
 const CLAPS_KEY_CHANNEL = 'CLAPS_KEY_CHANNEL';
+const _ = require('lodash');
 
 // https://coolors.co/963484-f7f1f6-4e4d5c-223843-f2efe9
 
@@ -22,17 +23,30 @@ app.get('/imprint', function (req, res) {
 });
 
 store.subscribe(CLAPS_KEY_CHANNEL, (clapChange) => {
-    sendStats();
+    throttledSendStats();
 });
 
+let lastClaps;
+let lastClapTime;
 async function sendStats() {
     const claps = parseInt(await store.get(CLAPS_KEY), 10);
     const connections = parseInt(await store.get(USERS_ACTIVE_KEY), 10);
+    let clapsPerSecond = null;
+    if (lastClapTime) {
+        const timeDelta = (new Date()).getTime() - lastClapTime;
+        const clapDelta = claps - lastClaps;
+        clapsPerSecond = clapDelta/(timeDelta/1000);
+    }
+    lastClaps = claps;
+    lastClapTime = (new Date()).getTime();
     io.sockets.emit('stats', {
         claps,
-        connections
+        connections,
+        clapsPerSecond
     });
 }
+
+const throttledSendStats = _.throttle(sendStats, 100);
 
 io.on('connection', async function (socket) {
     debug('connection');
@@ -53,8 +67,15 @@ io.on('connection', async function (socket) {
 
 async function submitClap() {
     await store.incr(CLAPS_KEY);
+    throttledSendChange();
+}
+
+function sendChange() {
     store.publish(CLAPS_KEY_CHANNEL, 'changed');
 }
+
+
+const throttledSendChange = _.throttle(sendChange, 100);
 
 function Clapper() {
 }
