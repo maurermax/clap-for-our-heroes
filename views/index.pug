@@ -1,0 +1,133 @@
+include start.pug
+div(id="particle-box")
+div(id="clapBody" class="container")
+    h1(style="text-align: center;") Clap For Our Heroes
+    h2(style="text-align: center;") Thank You!
+    div(class="groupContainer")
+        span(v-for="group in groups" class="group" v-bind:class="{ active: (group==activeGroup) }") {{group}}
+    div(class="clapContainer")
+        span(class="clapCount") {{claps | format}}
+    div(class="clapLabel") claps
+    div(class="moreInfo")
+        span(class="localClaps") Your claps: {{localClaps | format}}
+        span(style="display: inline-block; width: 80px; height: 1px;")
+        span(class="connectionCount") People clapping: {{connections | format}}
+    div(class="ctaContainer")
+        a(class='cta' v-on:click="clap();")
+            img(id="clapHands" src="/images/clap.svg")
+    footer
+        div(class="made") Made with ❤ in Munich
+        div(class="imprint") <a href="/imprint">Impressum - Datenschutz</a>
+        div(class="iconInfo") Icon created by <a href="https://www.flaticon.com/de/autoren/darius-dan" title="Darius Dan">Darius Dan</a> from <a href="https://www.flaticon.com/de/" title="Flaticon">www.flaticon.com</a>
+
+
+script(src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous")
+script(src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous")
+script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous")
+script(src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js")
+script(src="/socket.io/socket.io.js")
+script.
+    var socket = io.connect();
+    Vue.filter('format', function (value) {
+        if (typeof value !== "number") {
+            return value;
+        }
+        var formatter = new Intl.NumberFormat({
+            minimumFractionDigits: 0,
+        });
+        return formatter.format(value);
+    });
+    const particles = [];
+    let lastTimestamp = null;
+    const container = document.getElementById('particle-box');
+    function step(timestamp) {
+        if (!lastTimestamp) {
+            lastTimestamp = timestamp;
+            window.requestAnimationFrame(step);
+            return;
+        }
+        const delta = (timestamp - lastTimestamp)/1000;
+        lastTimestamp = timestamp;
+        for (let i=0;i < particles.length;i++) {
+            const p = particles[i];
+            p.x += p.dx * delta;
+            p.y += p.dy * delta;
+            p.opacity += p.dOpacity * delta;
+            p.dx += p.vx;
+            p.dy += p.vy;
+            p.rotation += p.dRotation * delta;
+            p.element.style.transform = 'translate('+ p.x +'px, '+p.y+'px) rotate('+p.rotation+'deg)';
+            p.element.style.opacity = p.opacity;
+            if (p.opacity <= 0) {
+                container.removeChild(p.element);
+                particles.splice(i,1);
+                i--;
+            }
+        }
+        window.requestAnimationFrame(step);
+    }
+
+    function addParticle(positionElement) {
+        const el = document.createElement('img');
+        el.src = '/images/clap_gray.svg';
+        const parentPosition = positionElement.getBoundingClientRect()
+        /*el.width = '30';
+        el.height = '30';*/
+        particles.push({
+            element: el,
+            x: parentPosition.left,
+            y: parentPosition.top,
+            dx: Math.random() * 20 - 10,
+            dy: -10,
+            vx: Math.random() * 100 - 50,
+            vy: -Math.random() * 80,
+            opacity: 1,
+            dOpacity: -0.5,
+            rotation: 0,
+            dRotation: Math.random() * 360 - 180
+        });
+        container.appendChild(el);
+    }
+
+    /*const el2 = document.createElement('img');
+    el2.src = '/images/clap.svg';
+    container.appendChild(el2);*/
+    window.requestAnimationFrame(step);
+    const clapController = new Vue({
+        el: '#clapBody',
+        data: {
+            claps: 0,
+            localClaps: 0,
+            connections: 0,
+            groups: ['Doctors', 'Health Care Workers', 'Police and Firefighters', 'Store Workers', 'Social Distancers'],
+            activeGroup: ""
+        },
+        methods: {
+            incomingStats: function(stats) {
+               this.claps = stats.claps;
+               this.connections = stats.connections;
+            },
+            clap: function() {
+                socket.emit('clap');
+                this.localClaps++;
+                addParticle(document.getElementById('clapHands'));
+            },
+            changeActiveGroup: function() {
+                if (this.groups.length <= 1) return;
+                let newGroup;
+                while (!newGroup || newGroup === this.activeGroup) {
+                    newGroup = this.groups[Math.floor(Math.random()* this.groups.length)]
+                }
+                this.activeGroup = newGroup;
+            }
+        },
+        mounted: function() {
+            setInterval(() => {
+                this.changeActiveGroup();
+            }, 5000);
+            this.changeActiveGroup();
+        }
+    });
+    socket.on('stats', (stats) => {
+        clapController.incomingStats(stats);
+    });
