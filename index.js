@@ -7,6 +7,7 @@ const store = require('./src/store');
 const USERS_ACTIVE_KEY = 'USERS_ACTIVE';
 const CLAPS_KEY = 'CLAPS_KEY';
 const CLAPS_KEY_CHANNEL = 'CLAPS_KEY_CHANNEL';
+const CLAPPER_CLAPS_KEY = 'CLAPPER_CLAPS_CLAPS';
 const _ = require('lodash');
 
 // https://coolors.co/963484-f7f1f6-4e4d5c-223843-f2efe9
@@ -93,6 +94,7 @@ Clapper.prototype.init = async function() {
 
 Clapper.prototype.clap = async function () {
     await submitClap();
+    await store.incr(CLAPPER_CLAPS_KEY);
     if (Math.random() > 0.01) {
         setTimeout(() => {this.clap()}, Math.random() * 1000);
     } else {
