@@ -107,7 +107,7 @@ Clapper.prototype.clap = async function () {
 if (process.env.ENABLE_CLAPPERS === 'true') {
     setInterval(async () => {
         const connections = parseInt(await store.get(USERS_ACTIVE_KEY), 10);
-        if (connections < 10 && Math.random() < .1) {
+        if (connections < 3 && Math.random() < .1) {
             const c = new Clapper();
             c.init();
         }
