@@ -114,7 +114,9 @@ if (process.env.ENABLE_CLAPPERS === 'true') {
     }, 3000);
 }
 
-store.set(USERS_ACTIVE_KEY, 0);
+if (process.env.RESET_ACTIVE_ON_START === 'true') {
+    store.set(USERS_ACTIVE_KEY, 0);
+}
 
 const s = server.listen(process.env.PORT || 5001, function () {
     let host = s.address().address;
