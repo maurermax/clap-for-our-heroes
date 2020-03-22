@@ -11,6 +11,10 @@ body {
     box-shadow: 2px 2px 7px rgba(78, 77, 92, .5);
 }
 
+.wirvsvirus {
+    margin-bottom: 20px;
+}
+
 .clapContainer {
     text-align: center;
 }
@@ -64,9 +68,15 @@ body {
 }
 
 footer {
+    display: flex;
+    flex-direction: row;
     font-size: 12px;
     text-align: center;
-    margin-top: 30px;
+    margin: 30px 0 20px 0;
+}
+
+.footerText {
+    flex-grow: 1;
 }
 
 .groupContainer {
@@ -106,10 +116,6 @@ footer {
     left: 0;
     width: 80px;
     height: 80px;
-}
-
-footer {
-    margin: 30px 0;
 }
 
 .credits {
