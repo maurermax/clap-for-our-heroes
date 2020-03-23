@@ -106,7 +106,14 @@ script.
             connections: 0,
             groups: ['Doctors', 'Health Care Workers', 'Police and Firefighters', 'Store Workers', 'Social Distancers'],
             activeGroup: "",
-            clapSound: new Howl({src: ['/sfx/clap.mp3'], volume: 0.5}),
+            clapSounds: [
+                new Howl({src: ['/sfx/clap01.mp3'], volume: 0.5}),
+                new Howl({src: ['/sfx/clap02.mp3'], volume: 0.5}),
+                new Howl({src: ['/sfx/clap03.mp3'], volume: 0.5}),
+                new Howl({src: ['/sfx/clap04.mp3'], volume: 0.5}),
+                new Howl({src: ['/sfx/clap05.mp3'], volume: 0.5}),
+                new Howl({src: ['/sfx/clap06.mp3'], volume: 0.5})
+            ],
             crowdSound: new Howl({src: ['/sfx/crowd.mp3'], loop: true, volume: 0.5}),
             massSound: new Howl({src: ['/sfx/mass.mp3'], loop: true, volume: 0.5}),
             clapsPerSecond: 0,
@@ -135,7 +142,7 @@ script.
                 socket.emit('clap');
                 this.localClaps++;
                 addParticle(document.getElementById('clapHands'));
-                this.clapSound.play();
+                this.clapSounds[Math.floor(Math.random()*this.clapSounds.length)].play();
             },
             changeActiveGroup: function() {
                 if (this.groups.length <= 1) return;
